@@ -115,14 +115,16 @@ namespace PegSolitare
             Console.WriteLine();
         }
 
-        public SearchAlgorithm GetMethod(string method)
+        public Action GetMethod(string method)
         {
             if (method == "depth")
-                return SearchAlgorithm.depth;
+                return Action.depth;
             else if (method == "best")
-                return SearchAlgorithm.best;
+                return Action.best;
+            else if (method == "verify")
+                return Action.verify;
 
-            return SearchAlgorithm.wrong;
+            return Action.wrong;
         }
     }
 }

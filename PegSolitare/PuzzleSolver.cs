@@ -19,7 +19,7 @@ namespace PegSolitare
         /// </summary>
         /// <param name="currentNode">Current Node</param>
         /// <param name="method">Search Algorithm</param>
-        public void FindChildern(TreeNode currentNode, SearchAlgorithm method)
+        public void FindChildern(TreeNode currentNode, Action method)
         {
             List<(int, int)> blanks = FindBlanks(currentNode.Puzzle);
             foreach (var blank in blanks)
@@ -40,11 +40,11 @@ namespace PegSolitare
                         child.OldPosition = (blank.Item1 - 2, blank.Item2);
                         child.NewPosition = (blank.Item1, blank.Item2);
 
-                        if (method == SearchAlgorithm.depth)
+                        if (method == Action.depth)
                         {
                             Frontier.Insert(0, child);
                         }
-                        else if(method == SearchAlgorithm.best)
+                        else if(method == Action.best)
                         {
                             child.H = CalculateHeuristic(child.Puzzle);
                             AddNodeInOrder(child);
@@ -68,11 +68,11 @@ namespace PegSolitare
                         child.OldPosition = (blank.Item1, blank.Item2 - 2);
                         child.NewPosition = (blank.Item1, blank.Item2);
 
-                        if (method == SearchAlgorithm.depth)
+                        if (method == Action.depth)
                         {
                             Frontier.Insert(0, child);
                         }
-                        else if (method == SearchAlgorithm.best)
+                        else if (method == Action.best)
                         {
                             child.H = CalculateHeuristic(child.Puzzle);
                             AddNodeInOrder(child);
@@ -96,11 +96,11 @@ namespace PegSolitare
                         child.OldPosition = (blank.Item1, blank.Item2 + 2);
                         child.NewPosition = (blank.Item1, blank.Item2);
 
-                        if (method == SearchAlgorithm.depth)
+                        if (method == Action.depth)
                         {
                             Frontier.Insert(0, child);
                         }
-                        else if (method == SearchAlgorithm.best)
+                        else if (method == Action.best)
                         {
                             child.H = CalculateHeuristic(child.Puzzle);
                             AddNodeInOrder(child);
@@ -124,11 +124,11 @@ namespace PegSolitare
                         child.OldPosition = (blank.Item1 + 2, blank.Item2);
                         child.NewPosition = (blank.Item1, blank.Item2);
 
-                        if (method == SearchAlgorithm.depth)
+                        if (method == Action.depth)
                         {
                             Frontier.Insert(0, child);
                         }
-                        else if (method == SearchAlgorithm.best)
+                        else if (method == Action.best)
                         {
                             child.H = CalculateHeuristic(child.Puzzle);
                             AddNodeInOrder(child);
@@ -145,11 +145,11 @@ namespace PegSolitare
         /// </summary>
         /// <param name="puzzle">The puzzle given by the user</param>
         /// <param name="method">The search algorithm</param>
-        public void InitializeSearch(int[,] puzzle, SearchAlgorithm method)
+        public void InitializeSearch(int[,] puzzle, Action method)
         {
             TreeNode node = new TreeNode(puzzle, null);
 
-            if(method == SearchAlgorithm.best)
+            if(method == Action.best)
             {
                 node.H = CalculateHeuristic(node.Puzzle);
             }
@@ -168,7 +168,7 @@ namespace PegSolitare
         ///     TreeNode if Search finds a solution.
         ///     Null if there is no solution.
         /// </returns>
-        public TreeNode Search(SearchAlgorithm method, out SearchOutCome searchOutCome)
+        public TreeNode Search(Action method, out SearchOutCome searchOutCome)
         {
             TreeNode currentNode;
             Stopwatch stopwatch = new Stopwatch();
@@ -295,7 +295,7 @@ namespace PegSolitare
         /// It returns a List of tuples with the position
         /// of the pegs remaining.
         /// </returns>
-        private List<(int,int)> FindPegs(int[,] puzzle, out int numPegs)
+        public List<(int,int)> FindPegs(int[,] puzzle, out int numPegs)
         {
             List<(int, int)> pegs = new List<(int, int)>();
 
@@ -349,7 +349,7 @@ namespace PegSolitare
         ///     True if current puzzle is solution
         ///     False if current puzzle is not solution
         /// </returns>
-        private bool IsSolution(int[,] puzzle)
+        public bool IsSolution(int[,] puzzle)
         {
             int count = 0;
             for (int i = 0; i < puzzle.GetLength(0); i++)
