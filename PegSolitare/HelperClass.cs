@@ -7,30 +7,37 @@ namespace PegSolitare
 {
     class HelperClass
     {
-        public int ReadFile(string fileName, out int[,] puzzle, out int rows, out int cols)
+        public int[,] ReadFile(string fileName)
         {
-            string text = File.ReadAllText(fileName);
-
-            if(text == "")
+            int rows, cols;
+            int[,] puzzle;
+            string[] lines;
+            try
             {
-                Console.WriteLine($"Cannot open file {fileName}. Program terminates.\n");
-                puzzle = null;
-                rows = -1;
-                cols = -1;
-                return -1;
+               lines  = File.ReadAllLines(fileName);
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine("The given file could not be found");
+                return null;
+                
+            }
+            
+
+            if(lines.Length == 0)
+            {
+                Console.WriteLine($"File was empty");
+                return null;
             }
             else
             {
-                string[] nums = text.Split(" ");
+                string[] nums = lines[0].Split(" ");
                 int testInput;
                 bool correct = int.TryParse(nums[0],out testInput);
                 if (!correct)
                 {
                     Console.WriteLine("The rows are wrong");
-                    puzzle = null;
-                    rows = -1;
-                    cols = -1;
-                    return -1;
+                    return null;
                 }
                 else
                 {
@@ -38,48 +45,49 @@ namespace PegSolitare
                 }
 
                 correct = int.TryParse(nums[1], out testInput);
-                Console.WriteLine(nums[1]);
                 if (!correct)
                 {
                     Console.WriteLine("The columns are wrong");
-                    puzzle = null;
-                    rows = -1;
-                    cols = -1;
-                    return -1;
+                    return null;
                 }
                 else
                 {
                     cols = testInput;
                 }
 
-                int row = 0;
-                int col = 0;
                 puzzle = new int[rows, cols];
-                foreach (string num in nums)
+                //Used in case the file is not separated into lines
+                int puzzleRow = 0;
+                foreach (string line in lines)
                 {
-                    correct = int.TryParse(num, out testInput);
-                    if (!correct)
+                    int col = 0;
+                    
+                    foreach (string num in line.Split(" "))
                     {
-                        Console.WriteLine($"The item {row},{col} is wrong.");
-                        puzzle = null;
-                        rows = -1;
-                        cols = -1;
-                        return -1;
-                    }
-                    else
-                    {
-                        puzzle[row,col] = testInput;
-                        col++;
-                        if(cols%col == 1)
+                        if (num != "")
                         {
-                            col = 0;
-                            row++;
+                            correct = int.TryParse(num, out testInput);
+                            if (!correct)
+                            {
+                                Console.WriteLine($"The item {puzzleRow+1},{col+1} is wrong.");
+                                return null;
+                            }
+                            else
+                            {
+                                puzzle[puzzleRow, col] = testInput;
+                                col++;
+                                if (col >= cols)
+                                {
+                                    puzzleRow++;
+                                    col = 0;
+                                }
+                            }
                         }
-                    }
+                    } 
                 }
             }
 
-            return 0;
+            return puzzle;
         }
 
         public void WriteSolutionToFile(List<((int, int), (int, int))> solution, int moves, string outFile)
@@ -105,6 +113,16 @@ namespace PegSolitare
             }
 
             Console.WriteLine();
+        }
+
+        public SearchAlgorithm GetMethod(string method)
+        {
+            if (method == "depth")
+                return SearchAlgorithm.depth;
+            else if (method == "best")
+                return SearchAlgorithm.best;
+
+            return SearchAlgorithm.wrong;
         }
     }
 }

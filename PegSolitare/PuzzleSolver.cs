@@ -22,8 +22,6 @@ namespace PegSolitare
         public void FindChildern(TreeNode currentNode, SearchAlgorithm method)
         {
             List<(int, int)> blanks = FindBlanks(currentNode.Puzzle);
-            //Used fo debugging
-            HelperClass helper = new HelperClass();
             foreach (var blank in blanks)
             {
                 //Check if the top pegs can move
@@ -46,10 +44,11 @@ namespace PegSolitare
                         {
                             Frontier.Insert(0, child);
                         }
-
-                        //Console.WriteLine(child.OldPosition);
-                        //Console.WriteLine(child.NewPosition);
-                        //helper.PrintPuzzle(child.Puzzle);
+                        else if(method == SearchAlgorithm.best)
+                        {
+                            child.H = CalculateHeuristic(child.Puzzle);
+                            AddNodeInOrder(child);
+                        }
                     } 
                 }
 
@@ -73,10 +72,11 @@ namespace PegSolitare
                         {
                             Frontier.Insert(0, child);
                         }
-
-                        //Console.WriteLine(child.OldPosition);
-                        //Console.WriteLine(child.NewPosition);
-                        //helper.PrintPuzzle(child.Puzzle);
+                        else if (method == SearchAlgorithm.best)
+                        {
+                            child.H = CalculateHeuristic(child.Puzzle);
+                            AddNodeInOrder(child);
+                        }
                     } 
                 }
 
@@ -100,10 +100,11 @@ namespace PegSolitare
                         {
                             Frontier.Insert(0, child);
                         }
-
-                        //Console.WriteLine(child.OldPosition);
-                        //Console.WriteLine(child.NewPosition);
-                        //helper.PrintPuzzle(child.Puzzle);
+                        else if (method == SearchAlgorithm.best)
+                        {
+                            child.H = CalculateHeuristic(child.Puzzle);
+                            AddNodeInOrder(child);
+                        }
                     } 
                 }
 
@@ -127,10 +128,11 @@ namespace PegSolitare
                         {
                             Frontier.Insert(0, child);
                         }
-
-                        //Console.WriteLine(child.OldPosition);
-                        //Console.WriteLine(child.NewPosition);
-                        //helper.PrintPuzzle(child.Puzzle);
+                        else if (method == SearchAlgorithm.best)
+                        {
+                            child.H = CalculateHeuristic(child.Puzzle);
+                            AddNodeInOrder(child);
+                        }
                     } 
                 }
             }
@@ -149,7 +151,7 @@ namespace PegSolitare
 
             if(method == SearchAlgorithm.best)
             {
-                //TODO - initialize search with best
+                node.H = CalculateHeuristic(node.Puzzle);
             }
 
             Frontier.Insert(0, node);
@@ -166,31 +168,44 @@ namespace PegSolitare
         ///     TreeNode if Search finds a solution.
         ///     Null if there is no solution.
         /// </returns>
-        public TreeNode Search(SearchAlgorithm method)
+        public TreeNode Search(SearchAlgorithm method, out SearchOutCome searchOutCome)
         {
             TreeNode currentNode;
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
+            TimeSpan ts;
 
             while (Frontier.Count > 0)
             {
-                TimeSpan ts = stopwatch.Elapsed;
-                if(ts.Seconds > 20)
+                //Stopwatch st = new Stopwatch();
+                //st.Start();
+                ts = stopwatch.Elapsed;
+                if (ts.Minutes > 4)
                 {
+                    Console.WriteLine("Out of time");
+                    searchOutCome = SearchOutCome.outOfTime;
                     return null;
                 }
 
                 currentNode = Frontier.First();
 
                 if (IsSolution(currentNode.Puzzle))
+                {
+                    stopwatch.Stop();
+                    ts = stopwatch.Elapsed;
+                    Console.WriteLine($"Minutes: {ts.Minutes}, Seconds: {ts.Seconds}, Milliseconds: {ts.Milliseconds}");
+                    searchOutCome = SearchOutCome.success;
                     return currentNode;
+                    
+                }
 
                 Frontier.RemoveAt(0);
-
+                
                 FindChildern(currentNode, method);
             }
-            stopwatch.Stop();
 
+
+            searchOutCome = SearchOutCome.noSolution;
             return null;
         }
 
@@ -222,6 +237,32 @@ namespace PegSolitare
         }
 
         /// <summary>
+        /// Adds the new node in order accoring to
+        /// it's H value
+        /// </summary>
+        /// <param name="childNode">The node to insert</param>
+        private void AddNodeInOrder(TreeNode childNode)
+        {
+            if (Frontier.Count > 0)
+            {
+                foreach (TreeNode node in Frontier)
+                {
+                    if (node.H >= childNode.H)
+                    {
+                        Frontier.Insert(Frontier.IndexOf(node), childNode);
+                        break;
+                    }
+                } 
+            }
+            else
+            {
+                Frontier.Add(childNode);
+            }
+
+            //PrintFrontier();
+        }
+
+        /// <summary>
         /// This function finds all the blank spaces on the 
         /// puzzle
         /// </summary>
@@ -246,6 +287,60 @@ namespace PegSolitare
         }
 
         /// <summary>
+        /// This method finds all the pegs remaining 
+        /// on the given puzzle.
+        /// </summary>
+        /// <param name="puzzle">The current puzzle</param>
+        /// <returns>
+        /// It returns a List of tuples with the position
+        /// of the pegs remaining.
+        /// </returns>
+        private List<(int,int)> FindPegs(int[,] puzzle, out int numPegs)
+        {
+            List<(int, int)> pegs = new List<(int, int)>();
+
+            for (int i = 0; i < puzzle.GetLength(0); i++)
+            {
+                for (int j = 0; j < puzzle.GetLength(1); j++)
+                {
+                    if (puzzle[i, j] == 1)
+                    {
+                        pegs.Add((i, j));
+                    }
+                }
+            }
+
+            numPegs = pegs.Count;
+            return pegs;
+        }
+
+        /// <summary>
+        /// This method calculates the Heuristic value for
+        /// the given puzzle
+        /// </summary>
+        /// <param name="puzzle">The puzzle of the current node</param>
+        /// <returns>The Hueristic value</returns>
+        private int CalculateHeuristic(int[,] puzzle)
+        {
+            int numPegs;
+            (int, int)[] pegs = FindPegs(puzzle, out numPegs).ToArray();
+
+
+            int sum = 0;
+            for (int i = 0; i < numPegs; i++)
+            {
+                for (int j = i+1; j < numPegs; j++)
+                {
+                    sum += Math.Abs(pegs[i].Item1 - pegs[j].Item1) + Math.Abs(pegs[i].Item2 - pegs[j].Item2);
+                }
+            }
+
+            int h = sum;
+
+            return h;
+        }
+
+        /// <summary>
         /// Counts the number of pegs left to 
         /// check if current puzzle is solution
         /// </summary>
@@ -262,13 +357,14 @@ namespace PegSolitare
                 for (int j = 0; j < puzzle.GetLength(1); j++)
                 {
                     if (puzzle[i, j] == 1)
+                    {
                         count++;
+                        if (count > 1) return false;
+                    }
                 }
             }
 
-            if (count == 1)
-                return true;
-            return false;
+            return true;
         }
 
 
@@ -287,8 +383,9 @@ namespace PegSolitare
         {
             foreach (var item in Frontier)
             {
-                Console.WriteLine($"{item.OldPosition} , {item.NewPosition}");
+                Console.WriteLine($"{item.OldPosition} , {item.NewPosition}, {item.H}");
             }
+            Console.WriteLine("------------");
         }
     }
 }

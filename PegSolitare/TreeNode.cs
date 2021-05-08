@@ -10,6 +10,7 @@ namespace PegSolitare
         public TreeNode Parent { get; set; }
         public (int, int) OldPosition { get; set; }
         public (int, int) NewPosition { get; set; }
+        public int H { get; set; }
 
         public TreeNode(int[,] puzzle, TreeNode parent)
         {

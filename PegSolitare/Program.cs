@@ -7,38 +7,56 @@ namespace PegSolitare
     public enum SearchAlgorithm
     {
         depth,
-        best
+        best,
+        wrong
+    }
+
+    public enum SearchOutCome
+    {
+        outOfTime,
+        noSolution,
+        success
     }
     class Program
     {
         static void Main(string[] args)
         {
-            string filename = "input.txt";
-
-            
-
             HelperClass helper = new HelperClass();
-            int[,] puzzle = new int[,] { { 0, 0, 1, 1, 1, 0, 0 }, { 0, 1, 1, 1, 1, 1, 0 }, { 1, 1, 1, 2, 1, 1, 1 }, { 1, 1, 1, 1, 1, 1, 1 }, { 1, 1, 1, 1, 1, 1, 1 }, { 0, 1, 1, 1, 1, 1, 0 }, { 0, 0, 1, 1, 1, 0, 0 } };
-            //int[,] puzzle = new int[,] { { 0, 0, 2, 0, 0 }, { 0, 2, 1, 2, 0 }, { 2, 1, 1, 1, 2 }, { 0, 2, 1, 2, 0 }, { 0, 2, 1, 2, 0 }, { 0, 0, 2, 0, 0 } };
-            //helper.ReadFile(filename, out puzzle, out rows, out cols);
+
+            SearchAlgorithm method = helper.GetMethod(args[0]);
+
+            //Console.WriteLine(args[1]);
+            string filename = args[1];
+            string outFile = args[2];
+
+            Console.WriteLine(method);
+
+            int[,] puzzle;
+            puzzle = helper.ReadFile(filename);
+            if(puzzle == null)
+            {
+                Environment.Exit(Environment.ExitCode);
+            }
+            helper.PrintPuzzle(puzzle);
 
             PuzzleSolver solver = new PuzzleSolver();
-            solver.InitializeSearch(puzzle, SearchAlgorithm.depth);
-            TreeNode node = solver.Search(SearchAlgorithm.depth);
-            if(node != null)
+            solver.InitializeSearch(puzzle, method);
+            TreeNode node = solver.Search(method, out SearchOutCome outcome);
+            if (outcome == SearchOutCome.success)
             {
-                int moves;
-                List<((int,int), (int,int))> solution = solver.ExtractSolution(node, out moves);
-                helper.WriteSolutionToFile(solution, moves, "solution.txt");
+                List<((int, int), (int, int))> solution = solver.ExtractSolution(node, out int moves);
+                helper.WriteSolutionToFile(solution, moves, outFile);
+            }
+            else if(outcome == SearchOutCome.outOfTime)
+            {
+                Console.WriteLine("The search exceeded the given time (5 minutes).");
             }
             else
             {
-                Console.WriteLine("No solution");
+                Console.WriteLine("There is no solution for the given puzzle.");
             }
-
-
-
-            
         }
+
+        
     }
 }
